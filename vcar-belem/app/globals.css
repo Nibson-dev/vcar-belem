@@ -310,6 +310,146 @@ footer.site{padding:44px 0 30px;}
   .form-actions{
     flex-direction:column;
   }
+  /* ================================
+   CARROSSEL DOS VEÍCULOS
+   ================================ */
+
+.car-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.car-carousel-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Setas */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 20;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transform: translateY(-50%);
+
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+
+  font-size: 30px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.carousel-arrow:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.carousel-arrow-left {
+  left: 10px;
+}
+
+.carousel-arrow-right {
+  right: 10px;
+}
+
+/* Bolinhas */
+.carousel-dots {
+  position: absolute;
+  z-index: 20;
+
+  left: 50%;
+  bottom: 10px;
+
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 5px 8px;
+  border-radius: 20px;
+
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+
+  background: rgba(255, 255, 255, 0.55);
+
+  cursor: pointer;
+}
+
+.carousel-dot.active {
+  background: #fff;
+  transform: scale(1.2);
+}
+
+/* Garante que os overlays originais fiquem acima da imagem,
+   mas abaixo das setas/dots */
+.car-photo .featured-flag,
+.car-photo .price-tag {
+  z-index: 15;
+}
+
+
+/* ================================
+   CELULAR
+   ================================ */
+
+@media (max-width: 640px) {
+  .carousel-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 26px;
+  }
+
+  .carousel-arrow-left {
+    left: 8px;
+  }
+
+  .carousel-arrow-right {
+    right: 8px;
+  }
+
+  .carousel-dots {
+    bottom: 8px;
+    gap: 5px;
+  }
+
+  .carousel-dot {
+    width: 6px;
+    height: 6px;
+  }
+}
 
   .form-actions .btn{
     width:100%;
