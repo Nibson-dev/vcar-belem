@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { unstable_noStore as noStore } from 'next/cache';
 
 // A conexão só é criada quando a primeira query roda (nunca no carregamento do
 // módulo), para que `next build` não quebre antes das variáveis de ambiente
@@ -68,6 +69,7 @@ function ensureSchema() {
 }
 
 export async function getSettings() {
+  noStore();
   await ensureSchema();
   const rows = await sql`SELECT * FROM settings WHERE id = 1`;
   return rows[0];
@@ -95,6 +97,7 @@ export async function updateSettings(data) {
 }
 
 export async function getCars() {
+  noStore();
   await ensureSchema();
   const rows = await sql`SELECT * FROM cars ORDER BY created_at DESC`;
   return rows;
