@@ -58,6 +58,7 @@ function ensureSchema() {
           fuel TEXT DEFAULT 'Flex',
           color TEXT DEFAULT '',
           photo_url TEXT,
+          photo_urls TEXT[] DEFAULT '{}',
           featured BOOLEAN DEFAULT false,
           description TEXT DEFAULT '',
           created_at TIMESTAMPTZ DEFAULT now()
