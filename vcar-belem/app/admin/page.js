@@ -7,9 +7,18 @@ import { formatBRL, formatKm } from '@/lib/format';
 import { IconEdit, IconTrash, IconUpload } from '@/lib/icons';
 
 const EMPTY_CAR = {
-  name: '', brand: '', year: '', price: '', km: '',
-  transmission: 'Manual', fuel: 'Flex', color: '', description: '',
-  featured: false, photo_url: null,
+  name: '',
+  brand: '',
+  year: '',
+  price: '',
+  km: '',
+  transmission: 'Manual',
+  fuel: 'Flex',
+  color: '',
+  description: '',
+  featured: false,
+  photo_url: null,
+  photo_urls: [],
 };
 
 export default function AdminPage() {
@@ -33,13 +42,16 @@ export default function AdminPage() {
     e.preventDefault();
     setLoginErr('');
     setLoggingIn(true);
+
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
+
       const data = await res.json();
+
       if (data.ok) setIsAdmin(true);
       else setLoginErr(data.error || 'Senha incorreta.');
     } catch {
@@ -61,7 +73,10 @@ export default function AdminPage() {
       <div className="admin-login-wrap">
         <form className="modal" onSubmit={doLogin} style={{ position: 'static' }}>
           <h3>Painel administrativo</h3>
-          <p className="sub">Entre com a senha para gerenciar o estoque, a logo e os contatos.</p>
+          <p className="sub">
+            Entre com a senha para gerenciar o estoque, a logo e os contatos.
+          </p>
+
           <div className="field">
             <label htmlFor="loginPass">Senha</label>
             <input
@@ -72,12 +87,25 @@ export default function AdminPage() {
               autoFocus
             />
           </div>
+
           {loginErr && <div className="hint-err">{loginErr}</div>}
-          <button className="btn btn-yellow" style={{ width: '100%' }} type="submit" disabled={loggingIn}>
+
+          <button
+            className="btn btn-yellow"
+            style={{ width: '100%' }}
+            type="submit"
+            disabled={loggingIn}
+          >
             {loggingIn ? 'Entrando…' : 'Entrar'}
           </button>
+
           <p className="sub" style={{ marginTop: 16 }}>
-            <Link href="/" style={{ color: 'var(--yellow)', textDecoration: 'none' }}>&larr; Voltar ao site</Link>
+            <Link
+              href="/"
+              style={{ color: 'var(--yellow)', textDecoration: 'none' }}
+            >
+              &larr; Voltar ao site
+            </Link>
           </p>
         </form>
       </div>
@@ -99,24 +127,52 @@ function AdminDashboard({ onLogout }) {
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <div className="admin-page-brand">VCar <span>Admin</span></div>
+        <div className="admin-page-brand">
+          VCar <span>Admin</span>
+        </div>
+
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-          <Link href="/" className="btn btn-outline btn-small">Ver site</Link>
-          <button className="btn btn-outline btn-small" onClick={onLogout}>Sair</button>
+          <Link href="/" className="btn btn-outline btn-small">
+            Ver site
+          </Link>
+
+          <button className="btn btn-outline btn-small" onClick={onLogout}>
+            Sair
+          </button>
         </div>
       </div>
+
       <div className="admin-page-body">
         <div className="admin-side">
-          <button className={`admin-tab${tab === 'estoque' ? ' active' : ''}`} onClick={() => setTab('estoque')}>Estoque</button>
-          <button className={`admin-tab${tab === 'loja' ? ' active' : ''}`} onClick={() => setTab('loja')}>Logo &amp; loja</button>
-          <button className={`admin-tab${tab === 'contato' ? ' active' : ''}`} onClick={() => setTab('contato')}>Contatos</button>
+          <button
+            className={`admin-tab${tab === 'estoque' ? ' active' : ''}`}
+            onClick={() => setTab('estoque')}
+          >
+            Estoque
+          </button>
+
+          <button
+            className={`admin-tab${tab === 'loja' ? ' active' : ''}`}
+            onClick={() => setTab('loja')}
+          >
+            Logo &amp; loja
+          </button>
+
+          <button
+            className={`admin-tab${tab === 'contato' ? ' active' : ''}`}
+            onClick={() => setTab('contato')}
+          >
+            Contatos
+          </button>
         </div>
+
         <div className="admin-main">
           {tab === 'estoque' && <EstoqueTab notify={notify} />}
           {tab === 'loja' && <LojaTab notify={notify} />}
           {tab === 'contato' && <ContatoTab notify={notify} />}
         </div>
       </div>
+
       {toast && <div className="toast">{toast}</div>}
     </div>
   );
@@ -132,6 +188,7 @@ function EstoqueTab({ notify }) {
 
   const load = useCallback(() => {
     setLoading(true);
+
     fetch('/api/cars')
       .then((r) => r.json())
       .then((d) => {
@@ -141,11 +198,17 @@ function EstoqueTab({ notify }) {
       .catch(() => setLoading(false));
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   async function handleDelete(id) {
     if (!confirm('Excluir este carro do estoque?')) return;
-    const res = await fetch(`/api/cars/${id}`, { method: 'DELETE' });
+
+    const res = await fetch(`/api/cars/${id}`, {
+      method: 'DELETE',
+    });
+
     if (res.ok) {
       notify('Carro removido.');
       load();
@@ -157,11 +220,18 @@ function EstoqueTab({ notify }) {
   return (
     <div>
       <h3>Gerenciar estoque</h3>
-      <p className="sub">Adicione, edite ou remova carros. As mudanças aparecem no site na hora.</p>
+
+      <p className="sub">
+        Adicione, edite ou remova carros. As mudanças aparecem no site na hora.
+      </p>
+
       <button
         className="btn btn-yellow btn-small"
         style={{ marginBottom: 20 }}
-        onClick={() => { setEditing(null); setFormOpen(true); }}
+        onClick={() => {
+          setEditing(null);
+          setFormOpen(true);
+        }}
       >
         + Adicionar carro
       </button>
@@ -173,16 +243,38 @@ function EstoqueTab({ notify }) {
       ) : (
         cars.map((car) => (
           <div className="car-row-admin" key={car.id}>
-            <img src={car.photo_url || CAR_PLACEHOLDER_SVG} alt="" />
+            <img
+              src={car.photo_url || CAR_PLACEHOLDER_SVG}
+              alt=""
+            />
+
             <div className="info">
-              <b>{car.brand} {car.name}</b>
-              <span>{car.year} · {formatBRL(car.price)} · {formatKm(car.km)}</span>
+              <b>
+                {car.brand} {car.name}
+              </b>
+
+              <span>
+                {car.year} · {formatBRL(car.price)} · {formatKm(car.km)}
+              </span>
             </div>
+
             <div className="actions">
-              <button className="icon-btn" title="Editar" onClick={() => { setEditing(car); setFormOpen(true); }}>
+              <button
+                className="icon-btn"
+                title="Editar"
+                onClick={() => {
+                  setEditing(car);
+                  setFormOpen(true);
+                }}
+              >
                 <IconEdit />
               </button>
-              <button className="icon-btn del" title="Excluir" onClick={() => handleDelete(car.id)}>
+
+              <button
+                className="icon-btn del"
+                title="Excluir"
+                onClick={() => handleDelete(car.id)}
+              >
                 <IconTrash />
               </button>
             </div>
@@ -197,7 +289,11 @@ function EstoqueTab({ notify }) {
           onSaved={() => {
             setFormOpen(false);
             load();
-            notify(editing ? 'Carro atualizado.' : 'Carro adicionado ao estoque.');
+            notify(
+              editing
+                ? 'Carro atualizado.'
+                : 'Carro adicionado ao estoque.'
+            );
           }}
         />
       )}
@@ -206,65 +302,154 @@ function EstoqueTab({ notify }) {
 }
 
 function CarFormModal({ car, onClose, onSaved }) {
-  const [form, setForm] = useState(() =>
-    car
-      ? {
-          name: car.name, brand: car.brand, year: car.year, price: car.price, km: car.km,
-          transmission: car.transmission, fuel: car.fuel, color: car.color || '',
-          description: car.description || '', featured: !!car.featured, photo_url: car.photo_url || null,
-        }
-      : { ...EMPTY_CAR }
-  );
+  const [form, setForm] = useState(() => {
+    if (!car) return { ...EMPTY_CAR };
+
+    const existingPhotos =
+      Array.isArray(car.photo_urls) && car.photo_urls.length > 0
+        ? car.photo_urls
+        : car.photo_url
+          ? [car.photo_url]
+          : [];
+
+    return {
+      name: car.name,
+      brand: car.brand,
+      year: car.year,
+      price: car.price,
+      km: car.km,
+      transmission: car.transmission,
+      fuel: car.fuel,
+      color: car.color || '',
+      description: car.description || '',
+      featured: !!car.featured,
+      photo_url: car.photo_url || existingPhotos[0] || null,
+      photo_urls: existingPhotos,
+    };
+  });
+
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
 
-  function set(k, v) { setForm((f) => ({ ...f, [k]: v })); }
+  function set(k, v) {
+    setForm((f) => ({
+      ...f,
+      [k]: v,
+    }));
+  }
 
-  async function handleFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
+  async function handleFiles(e) {
+    const files = Array.from(e.target.files || []);
+
+    if (!files.length) return;
+
     setUploading(true);
     setErr('');
-    const fd = new FormData();
-    fd.append('file', file);
+
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Falha no upload.');
-      set('photo_url', data.url);
+      const uploadedUrls = [];
+
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append('file', file);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: fd,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || 'Falha no upload.');
+        }
+
+        uploadedUrls.push(data.url);
+      }
+
+      setForm((current) => {
+        const nextPhotos = [
+          ...(current.photo_urls || []),
+          ...uploadedUrls,
+        ];
+
+        return {
+          ...current,
+          photo_urls: nextPhotos,
+          photo_url: nextPhotos[0] || null,
+        };
+      });
     } catch (e2) {
       setErr(e2.message);
     } finally {
       setUploading(false);
+      e.target.value = '';
     }
+  }
+
+  function removePhoto(index) {
+    setForm((current) => {
+      const nextPhotos = (current.photo_urls || []).filter(
+        (_, i) => i !== index
+      );
+
+      return {
+        ...current,
+        photo_urls: nextPhotos,
+        photo_url: nextPhotos[0] || null,
+      };
+    });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setErr('');
-    if (!form.name || !form.brand) { setErr('Preencha ao menos marca e modelo.'); return; }
-    if (!form.price || Number(form.price) <= 0) { setErr('Informe um valor válido.'); return; }
-    if (!form.year) { setErr('Informe o ano.'); return; }
+
+    if (!form.name || !form.brand) {
+      setErr('Preencha ao menos marca e modelo.');
+      return;
+    }
+
+    if (!form.price || Number(form.price) <= 0) {
+      setErr('Informe um valor válido.');
+      return;
+    }
+
+    if (!form.year) {
+      setErr('Informe o ano.');
+      return;
+    }
 
     setSaving(true);
+
     const payload = {
       ...form,
+      photo_url: form.photo_urls?.[0] || null,
+      photo_urls: form.photo_urls || [],
       year: parseInt(form.year, 10),
       price: parseFloat(form.price),
       km: parseFloat(form.km) || 0,
     };
+
     try {
-      const res = await fetch(car ? `/api/cars/${car.id}` : '/api/cars', {
-        method: car ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        car ? `/api/cars/${car.id}` : '/api/cars',
+        {
+          method: car ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         setErr(d.error || 'Não foi possível salvar.');
         return;
       }
+
       onSaved();
     } finally {
       setSaving(false);
@@ -272,55 +457,169 @@ function CarFormModal({ car, onClose, onSaved }) {
   }
 
   return (
-    <div className="overlay show" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+    <div
+      className="overlay show"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="modal" style={{ maxWidth: 520 }}>
-        <button className="close-x" onClick={onClose} type="button">&times;</button>
+        <button
+          className="close-x"
+          onClick={onClose}
+          type="button"
+        >
+          &times;
+        </button>
+
         <h3>{car ? 'Editar carro' : 'Adicionar carro'}</h3>
-        <p className="sub">Preencha os dados do veículo.</p>
+
+        <p className="sub">
+          Preencha os dados do veículo e adicione as fotos.
+        </p>
 
         <form onSubmit={handleSubmit}>
-          {form.photo_url && <img className="upload-preview" src={form.photo_url} alt="" />}
-          <label className="upload-zone" htmlFor="carFile">
-            <IconUpload />
-            <span>{uploading ? 'Enviando…' : 'Clique para enviar a foto do carro'}</span>
-          </label>
-          <input id="carFile" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFile} />
+          {/* FOTOS */}
+          {form.photo_urls?.length > 0 && (
+            <div className="car-photo-admin-grid">
+              {form.photo_urls.map((url, index) => (
+                <div className="car-photo-admin-item" key={`${url}-${index}`}>
+                  <img src={url} alt="" />
 
-          <div className="field" style={{ marginTop: 18 }}>
+                  {index === 0 && (
+                    <span className="car-photo-main-label">
+                      Principal
+                    </span>
+                  )}
+
+                  <button
+                    type="button"
+                    className="car-photo-remove"
+                    onClick={() => removePhoto(index)}
+                    title="Remover foto"
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <label className="upload-zone" htmlFor="carFiles">
+            <IconUpload />
+
+            <span>
+              {uploading
+                ? 'Enviando fotos…'
+                : 'Clique para adicionar fotos do carro'}
+            </span>
+
+            {!uploading && (
+              <small>
+                Você pode selecionar várias fotos de uma vez.
+              </small>
+            )}
+          </label>
+
+          <input
+            id="carFiles"
+            type="file"
+            accept="image/*"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handleFiles}
+          />
+
+          <div
+            className="field"
+            style={{ marginTop: 18 }}
+          >
             <label htmlFor="carName">Modelo</label>
-            <input id="carName" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="Ex: Toro Freedom 1.8" />
+
+            <input
+              id="carName"
+              value={form.name}
+              onChange={(e) => set('name', e.target.value)}
+              placeholder="Ex: Toro Freedom 1.8"
+            />
           </div>
+
           <div className="field-row">
             <div className="field">
               <label htmlFor="carBrand">Marca</label>
-              <input id="carBrand" value={form.brand} onChange={(e) => set('brand', e.target.value)} placeholder="Ex: Fiat" />
+
+              <input
+                id="carBrand"
+                value={form.brand}
+                onChange={(e) => set('brand', e.target.value)}
+                placeholder="Ex: Fiat"
+              />
             </div>
+
             <div className="field">
               <label htmlFor="carYear">Ano</label>
-              <input id="carYear" type="number" value={form.year} onChange={(e) => set('year', e.target.value)} min="1970" max="2030" />
+
+              <input
+                id="carYear"
+                type="number"
+                value={form.year}
+                onChange={(e) => set('year', e.target.value)}
+                min="1970"
+                max="2030"
+              />
             </div>
           </div>
+
           <div className="field-row">
             <div className="field">
               <label htmlFor="carPrice">Valor (R$)</label>
-              <input id="carPrice" type="number" value={form.price} onChange={(e) => set('price', e.target.value)} />
+
+              <input
+                id="carPrice"
+                type="number"
+                value={form.price}
+                onChange={(e) => set('price', e.target.value)}
+              />
             </div>
+
             <div className="field">
               <label htmlFor="carKm">Quilometragem</label>
-              <input id="carKm" type="number" value={form.km} onChange={(e) => set('km', e.target.value)} />
+
+              <input
+                id="carKm"
+                type="number"
+                value={form.km}
+                onChange={(e) => set('km', e.target.value)}
+              />
             </div>
           </div>
+
           <div className="field-row">
             <div className="field">
               <label htmlFor="carTransmission">Câmbio</label>
-              <select id="carTransmission" value={form.transmission} onChange={(e) => set('transmission', e.target.value)}>
+
+              <select
+                id="carTransmission"
+                value={form.transmission}
+                onChange={(e) =>
+                  set('transmission', e.target.value)
+                }
+              >
                 <option value="Manual">Manual</option>
                 <option value="Automático">Automático</option>
               </select>
             </div>
+
             <div className="field">
               <label htmlFor="carFuel">Combustível</label>
-              <select id="carFuel" value={form.fuel} onChange={(e) => set('fuel', e.target.value)}>
+
+              <select
+                id="carFuel"
+                value={form.fuel}
+                onChange={(e) =>
+                  set('fuel', e.target.value)
+                }
+              >
                 <option>Flex</option>
                 <option>Gasolina</option>
                 <option>Diesel</option>
@@ -329,24 +628,78 @@ function CarFormModal({ car, onClose, onSaved }) {
               </select>
             </div>
           </div>
+
           <div className="field">
             <label htmlFor="carColor">Cor</label>
-            <input id="carColor" value={form.color} onChange={(e) => set('color', e.target.value)} placeholder="Ex: Branco" />
+
+            <input
+              id="carColor"
+              value={form.color}
+              onChange={(e) => set('color', e.target.value)}
+              placeholder="Ex: Branco"
+            />
           </div>
+
           <div className="field">
-            <label htmlFor="carDesc">Descrição (opcional)</label>
-            <textarea id="carDesc" value={form.description} onChange={(e) => set('description', e.target.value)} />
+            <label htmlFor="carDesc">
+              Descrição (opcional)
+            </label>
+
+            <textarea
+              id="carDesc"
+              value={form.description}
+              onChange={(e) =>
+                set('description', e.target.value)
+              }
+            />
           </div>
-          <div className="field" style={{ display: 'flex', alignItems: 'center', gap: 10, flexDirection: 'row' }}>
-            <input type="checkbox" id="carFeatured" checked={form.featured} onChange={(e) => set('featured', e.target.checked)} style={{ width: 'auto' }} />
-            <label htmlFor="carFeatured" style={{ margin: 0 }}>Marcar como destaque</label>
+
+          <div
+            className="field"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              flexDirection: 'row',
+            }}
+          >
+            <input
+              type="checkbox"
+              id="carFeatured"
+              checked={form.featured}
+              onChange={(e) =>
+                set('featured', e.target.checked)
+              }
+              style={{ width: 'auto' }}
+            />
+
+            <label
+              htmlFor="carFeatured"
+              style={{ margin: 0 }}
+            >
+              Marcar como destaque
+            </label>
           </div>
+
           {err && <div className="hint-err">{err}</div>}
+
           <div className="form-actions">
-            <button className="btn btn-yellow" style={{ flex: 1 }} type="submit" disabled={saving || uploading}>
+            <button
+              className="btn btn-yellow"
+              style={{ flex: 1 }}
+              type="submit"
+              disabled={saving || uploading}
+            >
               {saving ? 'Salvando…' : 'Salvar carro'}
             </button>
-            <button className="btn btn-outline" type="button" onClick={onClose}>Cancelar</button>
+
+            <button
+              className="btn btn-outline"
+              type="button"
+              onClick={onClose}
+            >
+              Cancelar
+            </button>
           </div>
         </form>
       </div>
@@ -361,7 +714,9 @@ function LojaTab({ notify }) {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings').then((r) => r.json()).then((d) => setSettings(d.settings));
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings));
   }, []);
 
   if (!settings) return <p className="sub">Carregando…</p>;
@@ -372,64 +727,141 @@ function LojaTab({ notify }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(next),
     });
+
     return res.ok;
   }
 
   async function handleLogo(e) {
     const file = e.target.files[0];
+
     if (!file) return;
+
     setUploading(true);
+
     const fd = new FormData();
     fd.append('file', file);
+
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: fd,
+      });
+
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.error);
-      const next = { ...settings, logo_url: data.url };
+
+      const next = {
+        ...settings,
+        logo_url: data.url,
+      };
+
       setSettings(next);
+
       const ok = await persist(next);
-      notify(ok ? 'Logo atualizada.' : 'Não foi possível salvar.');
+
+      notify(
+        ok
+          ? 'Logo atualizada.'
+          : 'Não foi possível salvar.'
+      );
     } catch (e2) {
-      notify(e2.message || 'Falha ao enviar a logo.');
+      notify(
+        e2.message || 'Falha ao enviar a logo.'
+      );
     } finally {
       setUploading(false);
     }
   }
 
   async function removeLogo() {
-    const next = { ...settings, logo_url: null };
+    const next = {
+      ...settings,
+      logo_url: null,
+    };
+
     setSettings(next);
+
     const ok = await persist(next);
-    notify(ok ? 'Logo removida.' : 'Não foi possível salvar.');
+
+    notify(
+      ok
+        ? 'Logo removida.'
+        : 'Não foi possível salvar.'
+    );
   }
 
   async function saveSiteName() {
     const ok = await persist(settings);
-    notify(ok ? 'Nome da loja atualizado.' : 'Não foi possível salvar.');
+
+    notify(
+      ok
+        ? 'Nome da loja atualizado.'
+        : 'Não foi possível salvar.'
+    );
   }
 
   return (
     <div>
       <h3>Logo e identidade</h3>
-      <p className="sub">Envie a logo da loja (PNG com fundo transparente funciona melhor).</p>
 
-      {settings.logo_url && <img className="upload-preview" src={settings.logo_url} alt="" />}
+      <p className="sub">
+        Envie a logo da loja (PNG com fundo transparente funciona melhor).
+      </p>
+
+      {settings.logo_url && (
+        <img
+          className="upload-preview"
+          src={settings.logo_url}
+          alt=""
+        />
+      )}
+
       <label className="upload-zone" htmlFor="logoFile">
         <IconUpload />
-        <span>{uploading ? 'Enviando…' : 'Clique para enviar a logo (PNG, JPG ou SVG)'}</span>
+
+        <span>
+          {uploading
+            ? 'Enviando…'
+            : 'Clique para enviar a logo (PNG, JPG ou SVG)'}
+        </span>
       </label>
-      <input id="logoFile" type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogo} />
+
+      <input
+        id="logoFile"
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        onChange={handleLogo}
+      />
 
       <div className="form-actions">
-        <button className="btn btn-outline btn-small" type="button" onClick={removeLogo}>Remover logo</button>
+        <button
+          className="btn btn-outline btn-small"
+          type="button"
+          onClick={removeLogo}
+        >
+          Remover logo
+        </button>
       </div>
 
-      <div className="field" style={{ marginTop: 28, maxWidth: 440 }}>
-        <label htmlFor="siteNameInput">Nome da loja (aparece no cabeçalho, se não houver logo)</label>
+      <div
+        className="field"
+        style={{ marginTop: 28, maxWidth: 440 }}
+      >
+        <label htmlFor="siteNameInput">
+          Nome da loja (aparece no cabeçalho, se não houver logo)
+        </label>
+
         <input
           id="siteNameInput"
           value={settings.site_name || ''}
-          onChange={(e) => setSettings((s) => ({ ...s, site_name: e.target.value }))}
+          onChange={(e) =>
+            setSettings((s) => ({
+              ...s,
+              site_name: e.target.value,
+            }))
+          }
           onBlur={saveSiteName}
         />
       </div>
@@ -444,23 +876,36 @@ function ContatoTab({ notify }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings').then((r) => r.json()).then((d) => setSettings(d.settings));
+    fetch('/api/settings')
+      .then((r) => r.json())
+      .then((d) => setSettings(d.settings));
   }, []);
 
   if (!settings) return <p className="sub">Carregando…</p>;
 
-  function set(k, v) { setSettings((s) => ({ ...s, [k]: v })); }
+  function set(k, v) {
+    setSettings((s) => ({
+      ...s,
+      [k]: v,
+    }));
+  }
 
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
+
     try {
       const res = await fetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
       });
-      notify(res.ok ? 'Contatos atualizados.' : 'Não foi possível salvar.');
+
+      notify(
+        res.ok
+          ? 'Contatos atualizados.'
+          : 'Não foi possível salvar.'
+      );
     } finally {
       setSaving(false);
     }
@@ -469,41 +914,125 @@ function ContatoTab({ notify }) {
   return (
     <form onSubmit={handleSave} style={{ maxWidth: 560 }}>
       <h3>Informações de contato</h3>
-      <p className="sub">Essas informações aparecem na página inicial, na seção de contato.</p>
+
+      <p className="sub">
+        Essas informações aparecem na página inicial, na seção de contato.
+      </p>
 
       <div className="field-row">
         <div className="field">
           <label htmlFor="cPhone">Telefone</label>
-          <input id="cPhone" value={settings.phone || ''} onChange={(e) => set('phone', e.target.value)} placeholder="(91) 3000-0000" />
+
+          <input
+            id="cPhone"
+            value={settings.phone || ''}
+            onChange={(e) =>
+              set('phone', e.target.value)
+            }
+            placeholder="(91) 3000-0000"
+          />
         </div>
+
         <div className="field">
-          <label htmlFor="cWhats">WhatsApp (só números, com DDD)</label>
-          <input id="cWhats" value={settings.whatsapp || ''} onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, ''))} placeholder="5591999999999" />
+          <label htmlFor="cWhats">
+            WhatsApp (só números, com DDD)
+          </label>
+
+          <input
+            id="cWhats"
+            value={settings.whatsapp || ''}
+            onChange={(e) =>
+              set(
+                'whatsapp',
+                e.target.value.replace(/\D/g, '')
+              )
+            }
+            placeholder="5591999999999"
+          />
         </div>
       </div>
+
       <div className="field">
         <label htmlFor="cEmail">E-mail</label>
-        <input id="cEmail" type="email" value={settings.email || ''} onChange={(e) => set('email', e.target.value)} placeholder="contato@vcarbelem.com.br" />
+
+        <input
+          id="cEmail"
+          type="email"
+          value={settings.email || ''}
+          onChange={(e) =>
+            set('email', e.target.value)
+          }
+          placeholder="contato@vcarbelem.com.br"
+        />
       </div>
+
       <div className="field">
         <label htmlFor="cAddress">Endereço</label>
-        <input id="cAddress" value={settings.address || ''} onChange={(e) => set('address', e.target.value)} placeholder="Av. Exemplo, 1234 — Marco, Belém - PA" />
+
+        <input
+          id="cAddress"
+          value={settings.address || ''}
+          onChange={(e) =>
+            set('address', e.target.value)
+          }
+          placeholder="Av. Exemplo, 1234 — Marco, Belém - PA"
+        />
       </div>
+
       <div className="field">
-        <label htmlFor="cHours">Horário de funcionamento</label>
-        <input id="cHours" value={settings.hours || ''} onChange={(e) => set('hours', e.target.value)} placeholder="Seg a sáb, 8h às 18h" />
+        <label htmlFor="cHours">
+          Horário de funcionamento
+        </label>
+
+        <input
+          id="cHours"
+          value={settings.hours || ''}
+          onChange={(e) =>
+            set('hours', e.target.value)
+          }
+          placeholder="Seg a sáb, 8h às 18h"
+        />
       </div>
+
       <div className="field-row">
         <div className="field">
-          <label htmlFor="cInstagram">Instagram (link completo)</label>
-          <input id="cInstagram" value={settings.instagram || ''} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/vcarbelem" />
+          <label htmlFor="cInstagram">
+            Instagram (link completo)
+          </label>
+
+          <input
+            id="cInstagram"
+            value={settings.instagram || ''}
+            onChange={(e) =>
+              set('instagram', e.target.value)
+            }
+            placeholder="https://instagram.com/vcarbelem"
+          />
         </div>
+
         <div className="field">
-          <label htmlFor="cFacebook">Facebook (link completo)</label>
-          <input id="cFacebook" value={settings.facebook || ''} onChange={(e) => set('facebook', e.target.value)} placeholder="https://facebook.com/vcarbelem" />
+          <label htmlFor="cFacebook">
+            Facebook (link completo)
+          </label>
+
+          <input
+            id="cFacebook"
+            value={settings.facebook || ''}
+            onChange={(e) =>
+              set('facebook', e.target.value)
+            }
+            placeholder="https://facebook.com/vcarbelem"
+          />
         </div>
       </div>
-      <button className="btn btn-yellow" type="submit" disabled={saving}>{saving ? 'Salvando…' : 'Salvar contatos'}</button>
+
+      <button
+        className="btn btn-yellow"
+        type="submit"
+        disabled={saving}
+      >
+        {saving ? 'Salvando…' : 'Salvar contatos'}
+      </button>
     </form>
   );
 }
