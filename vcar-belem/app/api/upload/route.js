@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 import { requireAdmin } from '@/lib/auth';
+import sharp from 'sharp';
 
 export const runtime = 'nodejs';
 
@@ -27,20 +28,48 @@ export async function POST(req) {
   if (!file || typeof file === 'string') {
     return NextResponse.json({ error: 'Nenhum arquivo enviado.' }, { status: 400 });
   }
+
   if (!file.type || !file.type.startsWith('image/')) {
     return NextResponse.json({ error: 'Envie um arquivo de imagem.' }, { status: 400 });
   }
+
   if (file.size > 8 * 1024 * 1024) {
     return NextResponse.json({ error: 'Imagem muito grande (máximo 8MB).' }, { status: 400 });
   }
 
   try {
-    const blob = await put(file.name || 'imagem', file, {
-      access: 'public',
-      addRandomSuffix: true,
-    });
+    const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+    const optimizedBuffer = await sharp(inputBuffer)
+      .rotate()
+      .resize({
+        width: 1600,
+        height: 1600,
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({
+        quality: 82,
+      })
+      .toBuffer();
+
+    const blob = await put(
+      `imagem-${Date.now()}.webp`,
+      optimizedBuffer,
+      {
+        access: 'public',
+        addRandomSuffix: true,
+        contentType: 'image/webp',
+      }
+    );
+
     return NextResponse.json({ url: blob.url });
   } catch (e) {
-    return NextResponse.json({ error: 'Falha ao enviar a imagem.' }, { status: 500 });
+    console.error('ERRO NO PROCESSAMENTO DA IMAGEM:', e);
+
+    return NextResponse.json(
+      { error: 'Falha ao enviar a imagem.' },
+      { status: 500 }
+    );
   }
 }
