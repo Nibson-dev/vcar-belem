@@ -117,7 +117,7 @@ return (
 <img
 className="car-carousel-image"
 src={photos[current]}
-alt={${car.brand} ${car.name}}
+alt={'${car.brand} ${car.name}'}
 loading="lazy"
 draggable="false"
 />
