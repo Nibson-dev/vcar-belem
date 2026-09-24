@@ -4,275 +4,297 @@ import { useEffect, useMemo, useState } from 'react';
 import { formatBRL, formatKm, waLink } from '@/lib/format';
 import { CAR_PLACEHOLDER_SVG } from '@/lib/constants';
 
+function preloadImage(src) {
+  return new Promise((resolve) => {
+    const image = new Image();
+
+    image.onload = async () => {
+      try {
+        if (image.decode) {
+          await image.decode();
+        }
+      } catch {}
+
+      resolve();
+    };
+
+    image.onerror = () => {
+      resolve();
+    };
+
+    image.src = src;
+  });
+}
+
 function CarCarousel({ car }) {
-const photos = useMemo(() => {
-if (Array.isArray(car.photo_urls) && car.photo_urls.length > 0) {
-return car.photo_urls;
-}
+  const photos = useMemo(() => {
+    if (Array.isArray(car.photo_urls) && car.photo_urls.length > 0) {
+      return car.photo_urls;
+    }
 
-if (car.photo_url) {
-  return [car.photo_url];
-}
+    if (car.photo_url) {
+      return [car.photo_url];
+    }
 
-return [CAR_PLACEHOLDER_SVG];
+    return [CAR_PLACEHOLDER_SVG];
+  }, [car.photo_urls, car.photo_url]);
 
-}, [car.photo_urls, car.photo_url]);
+  const [current, setCurrent] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [loadingNext, setLoadingNext] = useState(false);
 
-const [current, setCurrent] = useState(0);
-const [touchStart, setTouchStart] = useState(null);
+  const hasMultiple = photos.length > 1;
 
-const hasMultiple = photos.length > 1;
+  useEffect(() => {
+    setCurrent((index) => {
+      if (index >= photos.length) {
+        return 0;
+      }
 
-useEffect(() => {
-setCurrent((index) => {
-if (index >= photos.length) {
-return 0;
-}
+      return index;
+    });
+  }, [photos.length]);
 
-  return index;
-});
+  useEffect(() => {
+    if (!hasMultiple) return;
 
-}, [photos.length]);
+    const nextIndex =
+      current === photos.length - 1
+        ? 0
+        : current + 1;
 
-useEffect(() => {
-if (!hasMultiple) return;
+    preloadImage(photos[nextIndex]);
+  }, [current, photos, hasMultiple]);
 
-const nextIndex =
-  current === photos.length - 1
-    ? 0
-    : current + 1;
+  async function goTo(index) {
+    if (index === current || !photos[index]) {
+      return;
+    }
 
-const previousIndex =
-  current === 0
-    ? photos.length - 1
-    : current - 1;
+    setLoadingNext(true);
 
-const nextImage = new Image();
-nextImage.src = photos[nextIndex];
+    await preloadImage(photos[index]);
 
-const previousImage = new Image();
-previousImage.src = photos[previousIndex];
-
-}, [current, photos, hasMultiple]);
-
-function previous(e) {
-if (e) {
-e.stopPropagation();
-}
-
-setCurrent((index) => {
-  if (index === 0) {
-    return photos.length - 1;
+    setCurrent(index);
+    setLoadingNext(false);
   }
 
-  return index - 1;
-});
+  function previous(e) {
+    if (e) {
+      e.stopPropagation();
+    }
 
-}
+    const previousIndex =
+      current === 0
+        ? photos.length - 1
+        : current - 1;
 
-function next(e) {
-if (e) {
-e.stopPropagation();
-}
-
-setCurrent((index) => {
-  if (index === photos.length - 1) {
-    return 0;
+    goTo(previousIndex);
   }
 
-  return index + 1;
-});
+  function next(e) {
+    if (e) {
+      e.stopPropagation();
+    }
 
-}
+    const nextIndex =
+      current === photos.length - 1
+        ? 0
+        : current + 1;
 
-function handleTouchStart(e) {
-if (!hasMultiple) return;
-
-setTouchStart(e.touches[0].clientX);
-
-}
-
-function handleTouchEnd(e) {
-if (!hasMultiple || touchStart === null) {
-return;
-}
-
-const touchEnd = e.changedTouches[0].clientX;
-const difference = touchStart - touchEnd;
-
-if (Math.abs(difference) > 45) {
-  if (difference > 0) {
-    next();
-  } else {
-    previous();
+    goTo(nextIndex);
   }
-}
 
-setTouchStart(null);
+  function handleTouchStart(e) {
+    if (!hasMultiple) return;
 
-}
+    setTouchStart(e.touches[0].clientX);
+  }
 
-return (
-<div className="car-carousel" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} >
-<img
-className="car-carousel-image"
-src={photos[current]}
-alt={'${car.brand} ${car.name}'}
-loading="lazy"
-draggable="false"
-/>
+  function handleTouchEnd(e) {
+    if (!hasMultiple || touchStart === null) {
+      return;
+    }
 
-  {hasMultiple && (
-    <>
-      <button
-        type="button"
-        className="carousel-arrow carousel-arrow-left"
-        onClick={previous}
-        aria-label="Foto anterior"
-      >
-        ‹
-      </button>
+    const touchEnd = e.changedTouches[0].clientX;
+    const difference = touchStart - touchEnd;
 
-      <button
-        type="button"
-        className="carousel-arrow carousel-arrow-right"
-        onClick={next}
-        aria-label="Próxima foto"
-      >
-        ›
-      </button>
+    if (Math.abs(difference) > 45) {
+      if (difference > 0) {
+        next();
+      } else {
+        previous();
+      }
+    }
 
-      <div className="carousel-counter">
-        {current + 1} / {photos.length}
-      </div>
+    setTouchStart(null);
+  }
 
-      <div className="carousel-dots">
-        {photos.map((_, index) => (
+  return (
+    <div
+      className="car-carousel"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <img
+        className="car-carousel-image"
+        src={photos[current]}
+        alt={`${car.brand} ${car.name}`}
+        loading="lazy"
+        draggable="false"
+      />
+
+      {hasMultiple && (
+        <>
           <button
-            key={index}
             type="button"
-            className={`carousel-dot${
-              index === current ? ' active' : ''
-            }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setCurrent(index);
-            }}
-            aria-label={`Ir para foto ${index + 1}`}
-          />
-        ))}
-      </div>
-    </>
-  )}
-</div>
+            className="carousel-arrow carousel-arrow-left"
+            onClick={previous}
+            aria-label="Foto anterior"
+            disabled={loadingNext}
+          >
+            ‹
+          </button>
 
-);
+          <button
+            type="button"
+            className="carousel-arrow carousel-arrow-right"
+            onClick={next}
+            aria-label="Próxima foto"
+            disabled={loadingNext}
+          >
+            ›
+          </button>
+
+          <div className="carousel-counter">
+            {current + 1} / {photos.length}
+          </div>
+
+          <div className="carousel-dots">
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`carousel-dot${
+                  index === current ? ' active' : ''
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goTo(index);
+                }}
+                aria-label={`Ir para foto ${index + 1}`}
+                disabled={loadingNext}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
 }
 
 export default function CarsGrid({ cars, settings }) {
-const [sort, setSort] = useState('recent');
+  const [sort, setSort] = useState('recent');
 
-const sorted = useMemo(() => {
-const list = [...cars];
+  const sorted = useMemo(() => {
+    const list = [...cars];
 
-if (sort === 'priceAsc') {
-  list.sort((a, b) => a.price - b.price);
-} else if (sort === 'priceDesc') {
-  list.sort((a, b) => b.price - a.price);
-} else if (sort === 'yearDesc') {
-  list.sort((a, b) => b.year - a.year);
-}
+    if (sort === 'priceAsc') {
+      list.sort((a, b) => a.price - b.price);
+    } else if (sort === 'priceDesc') {
+      list.sort((a, b) => b.price - a.price);
+    } else if (sort === 'yearDesc') {
+      list.sort((a, b) => b.year - a.year);
+    }
 
-return list;
+    return list;
+  }, [cars, sort]);
 
-}, [cars, sort]);
-
-return (
-<>
-<div className="toolbar">
-<select
-value={sort}
-onChange={(e) => setSort(e.target.value)}
->
-<option value="recent">Mais recentes</option>
-<option value="priceAsc">Menor preço</option>
-<option value="priceDesc">Maior preço</option>
-<option value="yearDesc">Ano mais novo</option>
-</select>
-</div>
-
-  <div className="cars-grid">
-    {sorted.length === 0 && (
-      <div className="empty-state">
-        <h3>Nenhum carro no estoque ainda</h3>
-        <p>
-          Assim que o admin adicionar veículos, eles aparecem aqui.
-        </p>
+  return (
+    <>
+      <div className="toolbar">
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+        >
+          <option value="recent">Mais recentes</option>
+          <option value="priceAsc">Menor preço</option>
+          <option value="priceDesc">Maior preço</option>
+          <option value="yearDesc">Ano mais novo</option>
+        </select>
       </div>
-    )}
 
-    {sorted.map((car) => {
-      const wa = waLink(
-        settings.whatsapp,
-        `Olá! Tenho interesse no ${car.brand} ${car.name} (${car.year}) anunciado no site da VCar Belém.`
-      );
-
-      return (
-        <div className="car-card" key={car.id}>
-          <div className="car-photo">
-            <CarCarousel car={car} />
-
-            {car.featured && (
-              <div className="featured-flag">
-                Destaque
-              </div>
-            )}
-
-            <div className="price-tag">
-              {formatBRL(car.price)}
-            </div>
+      <div className="cars-grid">
+        {sorted.length === 0 && (
+          <div className="empty-state">
+            <h3>Nenhum carro no estoque ainda</h3>
+            <p>
+              Assim que o admin adicionar veículos, eles aparecem aqui.
+            </p>
           </div>
+        )}
 
-          <div className="car-body">
-            <div className="brand">
-              {car.brand}
-            </div>
+        {sorted.map((car) => {
+          const wa = waLink(
+            settings.whatsapp,
+            `Olá! Tenho interesse no ${car.brand} ${car.name} (${car.year}) anunciado no site da VCar Belém.`
+          );
 
-            <h3>{car.name}</h3>
+          return (
+            <div className="car-card" key={car.id}>
+              <div className="car-photo">
+                <CarCarousel car={car} />
 
-            <div className="spec-row">
-              <div>
-                <b>{car.year}</b>
-                Ano
+                {car.featured && (
+                  <div className="featured-flag">
+                    Destaque
+                  </div>
+                )}
+
+                <div className="price-tag">
+                  {formatBRL(car.price)}
+                </div>
               </div>
 
-              <div>
-                <b>{formatKm(car.km)}</b>
-                Rodados
-              </div>
+              <div className="car-body">
+                <div className="brand">
+                  {car.brand}
+                </div>
 
-              <div>
-                <b>{car.transmission}</b>
-                Câmbio
+                <h3>{car.name}</h3>
+
+                <div className="spec-row">
+                  <div>
+                    <b>{car.year}</b>
+                    Ano
+                  </div>
+
+                  <div>
+                    <b>{formatKm(car.km)}</b>
+                    Rodados
+                  </div>
+
+                  <div>
+                    <b>{car.transmission}</b>
+                    Câmbio
+                  </div>
+                </div>
+
+                <div className="car-actions">
+                  <a
+                    className="btn btn-yellow btn-small"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    href={wa}
+                  >
+                    Tenho interesse
+                  </a>
+                </div>
               </div>
             </div>
-
-            <div className="car-actions">
-              <a
-                className="btn btn-yellow btn-small"
-                target="_blank"
-                rel="noopener noreferrer"
-                href={wa}
-              >
-                Tenho interesse
-              </a>
-            </div>
-          </div>
-        </div>
-      );
-    })}
-  </div>
-</>
-
-);
+          );
+        })}
+      </div>
+    </>
+  );
 }
