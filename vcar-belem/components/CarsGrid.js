@@ -1,29 +1,72 @@
+```jsx
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { formatBRL, formatKm, waLink } from '@/lib/format';
 import { CAR_PLACEHOLDER_SVG } from '@/lib/constants';
 
 function CarCarousel({ car }) {
-  const photos =
-    Array.isArray(car.photo_urls) && car.photo_urls.length > 0
-      ? car.photo_urls
-      : car.photo_url
-        ? [car.photo_url]
-        : [CAR_PLACEHOLDER_SVG];
+  const photos = useMemo(() => {
+    if (Array.isArray(car.photo_urls) && car.photo_urls.length > 0) {
+      return car.photo_urls;
+    }
+
+    if (car.photo_url) {
+      return [car.photo_url];
+    }
+
+    return [CAR_PLACEHOLDER_SVG];
+  }, [car.photo_urls, car.photo_url]);
 
   const [current, setCurrent] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
 
   const hasMultiple = photos.length > 1;
 
-  function previous() {
+  /*
+   * Garante que, caso o carro seja atualizado e a quantidade
+   * de fotos diminua, o índice atual continue válido.
+   */
+  useEffect(() => {
+    setCurrent((index) =>
+      index >= photos.length ? 0 : index
+    );
+  }, [photos.length]);
+
+  /*
+   * Pré-carrega a próxima e a anterior.
+   *
+   * Assim, quando o usuário clicar na seta, a imagem tende
+   * a aparecer muito mais rápido porque já estará no cache
+   * do navegador.
+   */
+  useEffect(() => {
+    if (!hasMultiple) return;
+
+    const nextIndex =
+      current === photos.length - 1 ? 0 : current + 1;
+
+    const previousIndex =
+      current === 0 ? photos.length - 1 : current - 1;
+
+    const nextImage = new Image();
+    nextImage.src = photos[nextIndex];
+
+    const previousImage = new Image();
+    previousImage.src = photos[previousIndex];
+  }, [current, photos, hasMultiple]);
+
+  function previous(e) {
+    if (e) e.stopPropagation();
+
     setCurrent((index) =>
       index === 0 ? photos.length - 1 : index - 1
     );
   }
 
-  function next() {
+  function next(e) {
+    if (e) e.stopPropagation();
+
     setCurrent((index) =>
       index === photos.length - 1 ? 0 : index + 1
     );
@@ -31,6 +74,7 @@ function CarCarousel({ car }) {
 
   function handleTouchStart(e) {
     if (!hasMultiple) return;
+
     setTouchStart(e.touches[0].clientX);
   }
 
@@ -42,8 +86,11 @@ function CarCarousel({ car }) {
 
     // Ignora toques pequenos para não trocar a foto acidentalmente.
     if (Math.abs(difference) > 45) {
-      if (difference > 0) next();
-      else previous();
+      if (difference > 0) {
+        next();
+      } else {
+        previous();
+      }
     }
 
     setTouchStart(null);
@@ -60,6 +107,7 @@ function CarCarousel({ car }) {
         src={photos[current]}
         alt={`${car.brand} ${car.name}`}
         loading="lazy"
+        draggable="false"
       />
 
       {hasMultiple && (
@@ -82,13 +130,22 @@ function CarCarousel({ car }) {
             ›
           </button>
 
+          <div className="carousel-counter">
+            {current + 1} / {photos.length}
+          </div>
+
           <div className="carousel-dots">
             {photos.map((_, index) => (
               <button
                 key={index}
                 type="button"
-                className={`carousel-dot${index === current ? ' active' : ''}`}
-                onClick={() => setCurrent(index)}
+                className={`carousel-dot${
+                  index === current ? ' active' : ''
+                }`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrent(index);
+                }}
                 aria-label={`Ir para foto ${index + 1}`}
               />
             ))}
@@ -202,3 +259,4 @@ export default function CarsGrid({ cars, settings }) {
     </>
   );
 }
+```
