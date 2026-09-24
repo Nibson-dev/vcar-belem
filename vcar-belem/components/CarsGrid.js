@@ -10,13 +10,11 @@ if (Array.isArray(car.photo_urls) && car.photo_urls.length > 0) {
 return car.photo_urls;
 }
 
-```
 if (car.photo_url) {
   return [car.photo_url];
 }
 
 return [CAR_PLACEHOLDER_SVG];
-```
 
 }, [car.photo_urls, car.photo_url]);
 
@@ -26,65 +24,79 @@ const [touchStart, setTouchStart] = useState(null);
 const hasMultiple = photos.length > 1;
 
 useEffect(() => {
-setCurrent((index) =>
-index >= photos.length ? 0 : index
-);
+setCurrent((index) => {
+if (index >= photos.length) {
+return 0;
+}
+
+  return index;
+});
+
 }, [photos.length]);
 
 useEffect(() => {
 if (!hasMultiple) return;
 
-```
 const nextIndex =
-  current === photos.length - 1 ? 0 : current + 1;
+  current === photos.length - 1
+    ? 0
+    : current + 1;
 
 const previousIndex =
-  current === 0 ? photos.length - 1 : current - 1;
+  current === 0
+    ? photos.length - 1
+    : current - 1;
 
 const nextImage = new Image();
 nextImage.src = photos[nextIndex];
 
 const previousImage = new Image();
 previousImage.src = photos[previousIndex];
-```
 
 }, [current, photos, hasMultiple]);
 
 function previous(e) {
-if (e) e.stopPropagation();
+if (e) {
+e.stopPropagation();
+}
 
-```
-setCurrent((index) =>
-  index === 0 ? photos.length - 1 : index - 1
-);
-```
+setCurrent((index) => {
+  if (index === 0) {
+    return photos.length - 1;
+  }
+
+  return index - 1;
+});
 
 }
 
 function next(e) {
-if (e) e.stopPropagation();
+if (e) {
+e.stopPropagation();
+}
 
-```
-setCurrent((index) =>
-  index === photos.length - 1 ? 0 : index + 1
-);
-```
+setCurrent((index) => {
+  if (index === photos.length - 1) {
+    return 0;
+  }
+
+  return index + 1;
+});
 
 }
 
 function handleTouchStart(e) {
 if (!hasMultiple) return;
 
-```
 setTouchStart(e.touches[0].clientX);
-```
 
 }
 
 function handleTouchEnd(e) {
-if (!hasMultiple || touchStart === null) return;
+if (!hasMultiple || touchStart === null) {
+return;
+}
 
-```
 const touchEnd = e.changedTouches[0].clientX;
 const difference = touchStart - touchEnd;
 
@@ -97,24 +109,19 @@ if (Math.abs(difference) > 45) {
 }
 
 setTouchStart(null);
-```
 
 }
 
-return ( <div
-   className="car-carousel"
-   onTouchStart={handleTouchStart}
-   onTouchEnd={handleTouchEnd}
- >
+return (
+<div className="car-carousel" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd} >
 <img
 className="car-carousel-image"
 src={photos[current]}
-alt={`${car.brand} ${car.name}`}
+alt={${car.brand} ${car.name}}
 loading="lazy"
 draggable="false"
 />
 
-```
   {hasMultiple && (
     <>
       <button
@@ -158,7 +165,6 @@ draggable="false"
     </>
   )}
 </div>
-```
 
 );
 }
@@ -169,7 +175,6 @@ const [sort, setSort] = useState('recent');
 const sorted = useMemo(() => {
 const list = [...cars];
 
-```
 if (sort === 'priceAsc') {
   list.sort((a, b) => a.price - b.price);
 } else if (sort === 'priceDesc') {
@@ -179,18 +184,23 @@ if (sort === 'priceAsc') {
 }
 
 return list;
-```
 
 }, [cars, sort]);
 
 return (
-<> <div className="toolbar">
+<>
+<div className="toolbar">
 <select
 value={sort}
 onChange={(e) => setSort(e.target.value)}
-> <option value="recent">Mais recentes</option> <option value="priceAsc">Menor preço</option> <option value="priceDesc">Maior preço</option> <option value="yearDesc">Ano mais novo</option> </select> </div>
+>
+<option value="recent">Mais recentes</option>
+<option value="priceAsc">Menor preço</option>
+<option value="priceDesc">Maior preço</option>
+<option value="yearDesc">Ano mais novo</option>
+</select>
+</div>
 
-```
   <div className="cars-grid">
     {sorted.length === 0 && (
       <div className="empty-state">
@@ -224,7 +234,9 @@ onChange={(e) => setSort(e.target.value)}
           </div>
 
           <div className="car-body">
-            <div className="brand">{car.brand}</div>
+            <div className="brand">
+              {car.brand}
+            </div>
 
             <h3>{car.name}</h3>
 
@@ -261,7 +273,6 @@ onChange={(e) => setSort(e.target.value)}
     })}
   </div>
 </>
-```
 
 );
 }
